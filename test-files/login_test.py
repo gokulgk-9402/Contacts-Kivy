@@ -15,6 +15,7 @@ response = requests.post(login_url, data=login_data)
 # print(response)
 # print(response.content)
 x = response.json()
+print(type(x))
 try:
     print(f"Your API Token is : {x['key']}")
 except:
