@@ -2,17 +2,20 @@ from kivymd.app import MDApp
 from kivymd.uix.screen import Screen
 from kivymd.uix.button import MDRectangleFlatButton, MDFlatButton
 from kivymd.uix.dialog import MDDialog
+from kivymd.uix.list import TwoLineListItem
 
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager
 
 import requests
+from functools import partial
 
 # helper_text: "test"
 # helper_text_mode: "on_focus"
 
 login_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/login/"
 register_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/registration/"
+contacts_url = "https://contaxmanagerapp.herokuapp.com/api/contacts/"
 
 loader = """
 <LoginScreen>:
@@ -41,10 +44,6 @@ loader = """
         font_size: '18sp'
         pos_hint: {'center_x':0.6, 'center_y':0.45}
         on_release: app.register_screen()
-<ContactsScreen>:
-    name: 'list'
-    MDLabel:
-        text: "CONTACTS LIST"
 <RegisterScreen>:
     name: 'register'
     MDTextField:
@@ -85,6 +84,20 @@ loader = """
         font_size: '18sp'
         pos_hint: {'center_x':0.6, 'center_y':0.35}
         on_release: app.register(username.text, email.text, password.text, password2.text)
+<ContactsScreen>:
+    name: 'list'
+    BoxLayout:
+        orientation: 'vertical'
+        MDLabel:
+            size_hint: 1, 0.1
+            text: 'My Contacts'
+            halign: 'center'
+            font_style: 'H3'
+            theme_text_color: 'Custom'
+            text_color: 0.16, 0.77, 0.96, 1
+        ScrollView:
+            MDList:
+                id: contacts
 """
 
 Builder.load_string(loader)
@@ -129,6 +142,9 @@ class ContaXApp(MDApp):
             if 'key' in resp:
                 check_string = "Successfully Logged In!"
                 close_button = MDFlatButton(text="Close", on_release=self.logged_in)
+                self.headers = {
+                    "Authorization": f"Token {resp['key']}"
+                }
             else:
                 check_string = "Invalid credentials!"
                 close_button = MDFlatButton(text="Close", on_release=self.close_login_dialog)
@@ -140,8 +156,34 @@ class ContaXApp(MDApp):
         self.login_dialog.dismiss()
 
     def logged_in(self, obj):
-        self.login_dialog.dismiss()
+        try:
+            self.login_dialog.dismiss()
+        except:
+            pass
+        try:
+            self.register_dialog.dismiss()
+        except:
+            pass
+
         self.root.current = 'list'
+        
+        response = requests.get(contacts_url, headers=self.headers)
+        resp = response.json()
+        i = 0
+        for ct in resp:
+            i += 1
+            if i%2:
+                bg = (0.06,0.06,0.06,1)
+            else:
+                bg = (0.05,0.05,0.05,1)
+            self.sm.get_screen('list').ids.contacts.add_widget(
+                TwoLineListItem(text=ct['name'], secondary_text=ct['description'].split('\n')[0],
+                font_style='H6', secondary_font_style='Body1',
+                bg_color=bg, secondary_theme_text_color = 'Custom', 
+                secondary_text_color = (0, 0.5, 0.7, 1),
+                on_release = partial(self.contact_details, ct['id'])
+                )
+            )
 
     def register_screen(self):
         self.root.current = 'register'
@@ -150,7 +192,7 @@ class ContaXApp(MDApp):
         self.root.current = 'login'
 
     def register(self, uname, email, pwd, pwd2):
-        print(uname, email, pwd, pwd2)
+        # print(uname, email, pwd, pwd2)
         self.sm.get_screen('register').ids.username.text = ""
         self.sm.get_screen('register').ids.email.text = ""
         self.sm.get_screen('register').ids.password.text = ""
@@ -169,10 +211,13 @@ class ContaXApp(MDApp):
             response = requests.post(register_url, data=register_data)
 
             resp = response.json()
-            print(resp)
+            # print(resp)
             if 'key' in resp:
                 check_string = "Successfully Registered!"
-                close_button = MDFlatButton(text="Close", on_release=self.registered)
+                close_button = MDFlatButton(text="Close", on_release=self.logged_in)
+                self.headers = {
+                    "Authorization": f"Token {resp['key']}"
+                }
             else:
                 check_string = "Invalid Data!"
                 close_button = MDFlatButton(text="Close", on_release=self.close_register_dialog)
@@ -187,5 +232,10 @@ class ContaXApp(MDApp):
     def registered(self, obj):
         self.register_dialog.dismiss()
         self.root.current = 'list'
+
+
+    def contact_details(self, id, ele):
+        print(f"Contact details for contact id: {id}")
+        print(ele)
 
 ContaXApp().run()
