@@ -1,8 +1,9 @@
 from kivymd.app import MDApp
 from kivymd.uix.screen import Screen
 from kivymd.uix.button import MDRectangleFlatButton, MDFlatButton
+from kivymd.uix.label import MDLabel
 from kivymd.uix.dialog import MDDialog
-from kivymd.uix.list import TwoLineListItem
+from kivymd.uix.list import TwoLineListItem, TwoLineIconListItem, IconLeftWidget, ThreeLineIconListItem
 
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager
@@ -16,6 +17,7 @@ from functools import partial
 login_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/login/"
 register_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/registration/"
 contacts_url = "https://contaxmanagerapp.herokuapp.com/api/contacts/"
+details_url = "https://contaxmanagerapp.herokuapp.com/api/contacts/"
 
 loader = """
 <LoginScreen>:
@@ -98,6 +100,28 @@ loader = """
         ScrollView:
             MDList:
                 id: contacts
+<DetailsScreen>:
+    name: 'details'
+    BoxLayout:
+        orientation: 'vertical'
+        MDLabel:
+            id: name
+            size_hint: 1, 0.1
+            text: ''
+            halign: 'center'
+            font_style: 'H3'
+            theme_text_color: 'Custom'
+            text_color: 0.16, 0.77, 0.96, 1
+        MDLabel:
+            id: description
+            size_hint: 0.6, 0.2
+            pos_hint: {'center_x': 0.5}
+            text:''
+            halign: 'center'
+            font_style: 'Body1'
+        ScrollView:
+            MDList:
+                id: details
 """
 
 Builder.load_string(loader)
@@ -111,6 +135,9 @@ class ContactsScreen(Screen):
 class RegisterScreen(Screen):
     pass
 
+class DetailsScreen(Screen):
+    pass
+
 class ContaXApp(MDApp):
 
     def build(self):
@@ -121,6 +148,7 @@ class ContaXApp(MDApp):
         self.sm.add_widget(LoginScreen(name='login'))
         self.sm.add_widget(ContactsScreen(name='list'))
         self.sm.add_widget(RegisterScreen(name='register'))
+        self.sm.add_widget(DetailsScreen(name='details'))
         
         return self.sm
 
@@ -235,7 +263,46 @@ class ContaXApp(MDApp):
 
 
     def contact_details(self, id, ele):
-        print(f"Contact details for contact id: {id}")
-        print(ele)
+        self.root.current = 'details'
+        response = requests.get(f"{details_url}{id}/",headers=self.headers)
+        resp = response.json()
+        self.sm.get_screen('details').ids.name.text = resp['name']
+        self.sm.get_screen('details').ids.description.text = resp['description']
+
+        if resp['mobile1']:
+            lst_item = TwoLineIconListItem(
+                    text = "Mobile",
+                    secondary_text = resp['mobile1']
+                )
+            lst_item.add_widget(IconLeftWidget(icon="phone"))
+            self.sm.get_screen('details').ids.details.add_widget(lst_item)
+
+        if resp['mobile2']:
+            lst_item = TwoLineIconListItem(
+                    text = "Mobile",
+                    secondary_text = resp['mobile2']
+                )
+            lst_item.add_widget(IconLeftWidget(icon="phone"))
+            self.sm.get_screen('details').ids.details.add_widget(lst_item)
+
+        if resp['email']:
+            lst_item = TwoLineIconListItem(
+                    text = "Email",
+                    secondary_text = resp['email']
+                )
+            lst_item.add_widget(IconLeftWidget(icon="email"))
+            self.sm.get_screen('details').ids.details.add_widget(lst_item)
+
+        if resp['address']:
+            lines = resp['address'].split('\n')
+            no_of_lines = len(lines)
+            # print(no_of_lines)
+            lst_item = ThreeLineIconListItem(
+                    text = "Address",
+                    secondary_text = "".join(lines[:no_of_lines//2]),
+                    tertiary_text = "".join(lines[no_of_lines//2:])
+                )
+            lst_item.add_widget(IconLeftWidget(icon="home"))
+            self.sm.get_screen('details').ids.details.add_widget(lst_item)
 
 ContaXApp().run()
