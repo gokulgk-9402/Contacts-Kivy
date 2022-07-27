@@ -91,11 +91,16 @@ loader = """
     MDFloatingActionButton:
         icon: 'arrow-left'
         pos_hint: {'center_y': 0.95}
-        icon_color: '#29bcea'
         theme_text_color: 'Custom'
-        md_bg_color: 0.1, 0.1, 0.1, 1
+        md_bg_color: 0.09, 0.08, 0.08, 1
         text_color: 0.16, 0.77, 0.96, 1
         on_release: app.list_back()
+    MDFloatingActionButton:
+        icon: 'account-plus-outline'
+        pos_hint: {'center_y': 0.95, 'center_x':0.95}
+        theme_text_color: 'Custom'
+        md_bg_color: 0.09, 0.08, 0.08, 1
+        text_color: 0.16, 0.77, 0.96, 1
     BoxLayout:
         orientation: 'vertical'
         MDLabel:
@@ -115,9 +120,22 @@ loader = """
         pos_hint: {'center_y': 0.95}
         icon_color: '#29bcea'
         theme_text_color: 'Custom'
-        md_bg_color: 0.1, 0.1, 0.1, 1
+        md_bg_color: 0.09, 0.08, 0.08, 1
         text_color: 0.16, 0.77, 0.96, 1
         on_release: app.details_back()
+    MDFloatingActionButton:
+        icon: 'pencil'
+        pos_hint: {'center_y': 0.95, 'center_x':0.85}
+        theme_text_color: 'Custom'
+        md_bg_color: 0.09, 0.08, 0.08, 1
+        text_color: 0.16, 0.77, 0.96, 1
+    MDFloatingActionButton:
+        icon: 'trash-can'
+        pos_hint: {'center_y': 0.95, 'center_x':0.95}
+        icon_color: '#29bcea'
+        theme_text_color: 'Custom'
+        md_bg_color: 0.09, 0.08, 0.08, 1
+        text_color: 0.16, 0.77, 0.96, 1
     BoxLayout:
         orientation: 'vertical'
         MDLabel:
