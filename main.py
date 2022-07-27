@@ -88,6 +88,14 @@ loader = """
         on_release: app.register(username.text, email.text, password.text, password2.text)
 <ContactsScreen>:
     name: 'list'
+    MDFloatingActionButton:
+        icon: 'arrow-left'
+        pos_hint: {'center_y': 0.95}
+        icon_color: '#29bcea'
+        theme_text_color: 'Custom'
+        md_bg_color: 0.1, 0.1, 0.1, 1
+        text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.list_back()
     BoxLayout:
         orientation: 'vertical'
         MDLabel:
@@ -102,11 +110,20 @@ loader = """
                 id: contacts
 <DetailsScreen>:
     name: 'details'
+    MDFloatingActionButton:
+        icon: 'arrow-left'
+        pos_hint: {'center_y': 0.95}
+        icon_color: '#29bcea'
+        theme_text_color: 'Custom'
+        md_bg_color: 0.1, 0.1, 0.1, 1
+        text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.details_back()
     BoxLayout:
         orientation: 'vertical'
         MDLabel:
             id: name
             size_hint: 1, 0.1
+            pos_hint: {'center_y': 0.5, 'center_x':0.5}
             text: ''
             halign: 'center'
             font_style: 'H3'
@@ -183,18 +200,9 @@ class ContaXApp(MDApp):
     def close_login_dialog(self, obj):
         self.login_dialog.dismiss()
 
-    def logged_in(self, obj):
-        try:
-            self.login_dialog.dismiss()
-        except:
-            pass
-        try:
-            self.register_dialog.dismiss()
-        except:
-            pass
+    def refresh_contacts(self):
+        self.sm.get_screen('list').ids.contacts.clear_widgets()
 
-        self.root.current = 'list'
-        
         response = requests.get(contacts_url, headers=self.headers)
         resp = response.json()
         i = 0
@@ -212,6 +220,20 @@ class ContaXApp(MDApp):
                 on_release = partial(self.contact_details, ct['id'])
                 )
             )
+
+    def logged_in(self, obj):
+        try:
+            self.login_dialog.dismiss()
+        except:
+            pass
+        try:
+            self.register_dialog.dismiss()
+        except:
+            pass
+
+        self.root.current = 'list'
+        
+        self.refresh_contacts()
 
     def register_screen(self):
         self.root.current = 'register'
@@ -261,9 +283,8 @@ class ContaXApp(MDApp):
         self.register_dialog.dismiss()
         self.root.current = 'list'
 
-
-    def contact_details(self, id, ele):
-        self.root.current = 'details'
+    def refresh_details(self, id):
+        self.sm.get_screen('details').ids.details.clear_widgets()
         response = requests.get(f"{details_url}{id}/",headers=self.headers)
         resp = response.json()
         self.sm.get_screen('details').ids.name.text = resp['name']
@@ -304,5 +325,19 @@ class ContaXApp(MDApp):
                 )
             lst_item.add_widget(IconLeftWidget(icon="home"))
             self.sm.get_screen('details').ids.details.add_widget(lst_item)
+
+    def contact_details(self, id, ele):
+        self.root.current = 'details'
+        
+        self.refresh_details(id)
+
+    def list_back(self):
+        self.sm.get_screen('list').ids.contacts.clear_widgets()
+        self.root.current = 'login'
+
+    def details_back(self):
+        self.sm.get_screen('details').ids.details.clear_widgets()
+        self.root.current = 'list'
+        self.refresh_contacts()
 
 ContaXApp().run()
