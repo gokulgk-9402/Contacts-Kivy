@@ -101,6 +101,7 @@ loader = """
         theme_text_color: 'Custom'
         md_bg_color: 0.09, 0.08, 0.08, 1
         text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.create_contact()
     BoxLayout:
         orientation: 'vertical'
         MDLabel:
@@ -157,6 +158,63 @@ loader = """
         ScrollView:
             MDList:
                 id: details
+<AddScreen>:
+    name: 'add'
+    MDFloatingActionButton:
+        icon: 'arrow-left'
+        pos_hint: {'center_y': 0.95}
+        icon_color: '#29bcea'
+        theme_text_color: 'Custom'
+        md_bg_color: 0.09, 0.08, 0.08, 1
+        text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.add_back()
+    MDTextField:
+        id: name
+        hint_text: "Name"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.85}
+        multiline: False
+    MDTextField:
+        id: description
+        hint_text: "Description"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.75}
+        multiline: True
+    MDTextField:
+        id: mobile1
+        hint_text: "Mobile"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.65}
+        multiline: False
+    MDTextField:
+        id: mobile2
+        hint_text: "Mobile"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.55}
+        multiline: False
+    MDTextField:
+        id: email
+        hint_text: "Email"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.45}
+        multiline: False
+    MDTextField:
+        id: address
+        hint_text: "Address"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.35}
+        multiline: True
+    MDRectangleFlatButton:
+        text: "Add"
+        font_size: '18sp'
+        pos_hint: {'center_x':0.5, 'center_y':0.25}
+        on_release: app.add_contact_send(name.text, description.text, mobile1.text, mobile2.text, email.text, address.text)
 """
 
 Builder.load_string(loader)
@@ -173,6 +231,9 @@ class RegisterScreen(Screen):
 class DetailsScreen(Screen):
     pass
 
+class AddScreen(Screen):
+    pass
+
 class ContaXApp(MDApp):
 
     def build(self):
@@ -184,6 +245,7 @@ class ContaXApp(MDApp):
         self.sm.add_widget(ContactsScreen(name='list'))
         self.sm.add_widget(RegisterScreen(name='register'))
         self.sm.add_widget(DetailsScreen(name='details'))
+        self.sm.add_widget(AddScreen(name='add'))
         
         return self.sm
 
@@ -257,6 +319,10 @@ class ContaXApp(MDApp):
         self.root.current = 'register'
     
     def back_to_login(self):
+        self.sm.get_screen('register').ids.username.text = ""
+        self.sm.get_screen('register').ids.email.text = ""
+        self.sm.get_screen('register').ids.password.text = ""
+        self.sm.get_screen('register').ids.password2.text = ""
         self.root.current = 'login'
 
     def register(self, uname, email, pwd, pwd2):
@@ -292,7 +358,6 @@ class ContaXApp(MDApp):
             
         self.register_dialog = MDDialog(title ="Register", text=check_string, buttons=[close_button])
         self.register_dialog.open()
-
         
     def close_register_dialog(self, obj):
         self.register_dialog.dismiss()
@@ -357,5 +422,56 @@ class ContaXApp(MDApp):
         self.sm.get_screen('details').ids.details.clear_widgets()
         self.root.current = 'list'
         self.refresh_contacts()
+
+    def add_back(self):
+        self.sm.get_screen('add').ids.name.text = ""
+        self.sm.get_screen('add').ids.description.text = ""
+        self.sm.get_screen('add').ids.mobile1.text = ""
+        self.sm.get_screen('add').ids.mobile2.text = ""
+        self.sm.get_screen('add').ids.email.text = ""
+        self.sm.get_screen('add').ids.address.text = ""
+        self.root.current = 'list'
+        self.refresh_contacts()
+
+    def create_contact(self):
+        self.root.current = 'add'
+
+    def add_contact_send(self, name, desc, mob1, mob2, em, addr):
+        flag = 0
+        if name == "":
+            check_string = "Invalid Data!"
+            close_button = MDFlatButton(text="Close", on_release=self.close_add_dialog)
+        
+        else:
+            self.sm.get_screen('add').ids.name.text = ""
+            self.sm.get_screen('add').ids.description.text = ""
+            self.sm.get_screen('add').ids.mobile1.text = ""
+            self.sm.get_screen('add').ids.mobile2.text = ""
+            self.sm.get_screen('add').ids.email.text = ""
+            self.sm.get_screen('add').ids.address.text = ""
+            
+            contact_data = {
+                "name": name,
+                "description": desc,
+                "mobile1": mob1,
+                "mobile2": mob2,
+                "email": em,
+                "address": addr
+            }
+
+            response = requests.post(details_url, headers=self.headers, data=contact_data)
+            flag = 1
+            
+            check_string = "Created contact successfully!"
+            close_button = MDFlatButton(text="Close", on_release=self.close_add_dialog)
+
+        self.add_dialog = MDDialog(title ="Add Contact", text=check_string, buttons=[close_button])
+        if flag == 1:
+            self.root.current = 'list'
+            self.refresh_contacts()
+        self.add_dialog.open()
+        
+    def close_add_dialog(self, obj):
+        self.add_dialog.dismiss()
 
 ContaXApp().run()
