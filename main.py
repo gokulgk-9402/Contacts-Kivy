@@ -1,6 +1,6 @@
 from kivymd.app import MDApp
 from kivymd.uix.screen import Screen
-from kivymd.uix.button import MDRectangleFlatButton, MDFlatButton
+from kivymd.uix.button import MDRectangleFlatButton, MDFlatButton, MDRaisedButton
 from kivymd.uix.label import MDLabel
 from kivymd.uix.dialog import MDDialog
 from kivymd.uix.list import TwoLineListItem, TwoLineIconListItem, IconLeftWidget, ThreeLineIconListItem
@@ -477,11 +477,20 @@ class ContaXApp(MDApp):
         self.add_dialog.dismiss()
 
     def delete_contact(self):
+        cancel_button = MDFlatButton(text="Cancel", on_release=self.close_confirmation_dialog)
+        confirm_button = MDRaisedButton(text="Confirm", on_release=self.delete_confirmed)
+        self.confirm_dialog = MDDialog(title="Confirm Delete", text="Are you sure you want to delete this contact?", buttons=[confirm_button, cancel_button])
+        self.confirm_dialog.open()
+    
+    def close_confirmation_dialog(self, obj):
+        self.confirm_dialog.dismiss()
+    
+    def delete_confirmed(self, obj):
+        self.confirm_dialog.dismiss()
         c_id = self.current_contact_id
         response = requests.delete(f"{details_url}{c_id}/",headers=self.headers)
-        # print(response)
-        # print(response.json())
         self.root.current = 'list'
         self.refresh_contacts()
+
 
 ContaXApp().run()
