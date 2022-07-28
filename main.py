@@ -130,6 +130,7 @@ loader = """
         theme_text_color: 'Custom'
         md_bg_color: 0.09, 0.08, 0.08, 1
         text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.edit_contact()
     MDFloatingActionButton:
         icon: 'trash-can'
         pos_hint: {'center_y': 0.95, 'center_x':0.95}
@@ -216,6 +217,63 @@ loader = """
         font_size: '18sp'
         pos_hint: {'center_x':0.5, 'center_y':0.25}
         on_release: app.add_contact_send(name.text, description.text, mobile1.text, mobile2.text, email.text, address.text)
+<EditScreen>:
+    name: 'edit'
+    MDFloatingActionButton:
+        icon: 'arrow-left'
+        pos_hint: {'center_y': 0.95}
+        icon_color: '#29bcea'
+        theme_text_color: 'Custom'
+        md_bg_color: 0.09, 0.08, 0.08, 1
+        text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.edit_back()
+    MDTextField:
+        id: name
+        hint_text: "Name"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.85}
+        multiline: False
+    MDTextField:
+        id: description
+        hint_text: "Description"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.75}
+        multiline: True
+    MDTextField:
+        id: mobile1
+        hint_text: "Mobile"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.65}
+        multiline: False
+    MDTextField:
+        id: mobile2
+        hint_text: "Mobile"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.55}
+        multiline: False
+    MDTextField:
+        id: email
+        hint_text: "Email"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.45}
+        multiline: False
+    MDTextField:
+        id: address
+        hint_text: "Address"
+        font_size: '20sp'
+        size_hint: 0.6, None
+        pos_hint: {'center_x':0.5, 'center_y':0.35}
+        multiline: True
+    MDRectangleFlatButton:
+        text: "Edit"
+        font_size: '18sp'
+        pos_hint: {'center_x':0.5, 'center_y':0.25}
+        on_release: app.edit_contact_send(name.text, description.text, mobile1.text, mobile2.text, email.text, address.text)
 """
 
 Builder.load_string(loader)
@@ -235,6 +293,9 @@ class DetailsScreen(Screen):
 class AddScreen(Screen):
     pass
 
+class EditScreen(Screen):
+    pass
+
 class ContaXApp(MDApp):
 
     def build(self):
@@ -247,6 +308,7 @@ class ContaXApp(MDApp):
         self.sm.add_widget(RegisterScreen(name='register'))
         self.sm.add_widget(DetailsScreen(name='details'))
         self.sm.add_widget(AddScreen(name='add'))
+        self.sm.add_widget(EditScreen(name='edit'))
         
         return self.sm
 
@@ -411,7 +473,7 @@ class ContaXApp(MDApp):
             lst_item.add_widget(IconLeftWidget(icon="home"))
             self.sm.get_screen('details').ids.details.add_widget(lst_item)
 
-    def contact_details(self, id, ele):
+    def contact_details(self, id, ele=None):
         self.root.current = 'details'
         
         self.refresh_details(id)
@@ -492,5 +554,63 @@ class ContaXApp(MDApp):
         self.root.current = 'list'
         self.refresh_contacts()
 
+    def edit_contact(self):
+        self.root.current= 'edit'
+        c_id = self.current_contact_id
+        response = requests.get(f"{details_url}{c_id}/",headers=self.headers)
+        resp = response.json()
+        self.sm.get_screen('edit').ids.name.text = resp['name']
+        if resp['description']:
+            self.sm.get_screen('edit').ids.description.text = resp['description']
+        if resp['mobile1']:
+            self.sm.get_screen('edit').ids.mobile1.text = resp['mobile1']
+        if resp['mobile2']:
+            self.sm.get_screen('edit').ids.mobile2.text = resp['mobile2']
+        if resp['email']:
+            self.sm.get_screen('edit').ids.email.text = resp['email']
+        if resp['address']:
+            self.sm.get_screen('edit').ids.address.text = resp['address']
+
+    def edit_back(self):
+        self.contact_details(self.current_contact_id)
+
+    def edit_contact_send(self, name, desc, mob1, mob2, em, addr):
+        c_id = self.current_contact_id
+        flag = 0
+        if name == "":
+            check_string = "Invalid Data!"
+            close_button = MDFlatButton(text="Close", on_release=self.close_edit_dialog)
+        
+        else:
+            self.sm.get_screen('edit').ids.name.text = ""
+            self.sm.get_screen('edit').ids.description.text = ""
+            self.sm.get_screen('edit').ids.mobile1.text = ""
+            self.sm.get_screen('edit').ids.mobile2.text = ""
+            self.sm.get_screen('edit').ids.email.text = ""
+            self.sm.get_screen('edit').ids.address.text = ""
+            
+            contact_data = {
+                "name": name,
+                "description": desc,
+                "mobile1": mob1,
+                "mobile2": mob2,
+                "email": em,
+                "address": addr
+            }
+
+            response = requests.put(f"{details_url}{c_id}/", headers=self.headers, data=contact_data)
+            flag = 1
+            
+            check_string = "Editted contact successfully!"
+            close_button = MDFlatButton(text="Close", on_release=self.close_edit_dialog)
+
+        self.edit_dialog = MDDialog(title ="Edit Contact", text=check_string, buttons=[close_button])
+        if flag == 1:
+            self.root.current = 'details'
+            self.refresh_details(c_id)
+        self.edit_dialog.open()
+
+    def close_edit_dialog(self, obj):
+        self.edit_dialog.dismiss()
 
 ContaXApp().run()
