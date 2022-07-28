@@ -137,6 +137,7 @@ loader = """
         theme_text_color: 'Custom'
         md_bg_color: 0.09, 0.08, 0.08, 1
         text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.delete_contact()
     BoxLayout:
         orientation: 'vertical'
         MDLabel:
@@ -367,6 +368,7 @@ class ContaXApp(MDApp):
         self.root.current = 'list'
 
     def refresh_details(self, id):
+        self.current_contact_id = id
         self.sm.get_screen('details').ids.details.clear_widgets()
         response = requests.get(f"{details_url}{id}/",headers=self.headers)
         resp = response.json()
@@ -473,5 +475,13 @@ class ContaXApp(MDApp):
         
     def close_add_dialog(self, obj):
         self.add_dialog.dismiss()
+
+    def delete_contact(self):
+        c_id = self.current_contact_id
+        response = requests.delete(f"{details_url}{c_id}/",headers=self.headers)
+        # print(response)
+        # print(response.json())
+        self.root.current = 'list'
+        self.refresh_contacts()
 
 ContaXApp().run()
