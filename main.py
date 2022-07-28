@@ -6,12 +6,13 @@ from kivymd.uix.dialog import MDDialog
 from kivymd.uix.list import TwoLineListItem, TwoLineIconListItem, IconLeftWidget, ThreeLineIconListItem
 
 from kivy.lang import Builder
-from kivy.uix.screenmanager import ScreenManager
+from kivy.uix.screenmanager import ScreenManager, SwapTransition
 
 import requests
 from functools import partial
 
 from kivy.core.window import Window
+from kivy.core.clipboard import Clipboard
 
 Window.keyboard_anim_args = {'d':.2, 't':'in_out_expo'}
 Window.softinpu_mode = "below_target"
@@ -306,7 +307,7 @@ class ContaXApp(MDApp):
         
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "LightBlue"
-        self.sm = ScreenManager()
+        self.sm = ScreenManager(transition=SwapTransition())
         self.sm.add_widget(LoginScreen(name='login'))
         self.sm.add_widget(ContactsScreen(name='list'))
         self.sm.add_widget(RegisterScreen(name='register'))
@@ -444,7 +445,8 @@ class ContaXApp(MDApp):
         if resp['mobile1']:
             lst_item = TwoLineIconListItem(
                     text = "Mobile",
-                    secondary_text = resp['mobile1']
+                    secondary_text = resp['mobile1'],
+                    on_release = partial(self.copy_details, resp['mobile1'])
                 )
             lst_item.add_widget(IconLeftWidget(icon="phone"))
             self.sm.get_screen('details').ids.details.add_widget(lst_item)
@@ -452,7 +454,8 @@ class ContaXApp(MDApp):
         if resp['mobile2']:
             lst_item = TwoLineIconListItem(
                     text = "Mobile",
-                    secondary_text = resp['mobile2']
+                    secondary_text = resp['mobile2'],
+                    on_release = partial(self.copy_details, resp['mobile2'])
                 )
             lst_item.add_widget(IconLeftWidget(icon="phone"))
             self.sm.get_screen('details').ids.details.add_widget(lst_item)
@@ -460,7 +463,8 @@ class ContaXApp(MDApp):
         if resp['email']:
             lst_item = TwoLineIconListItem(
                     text = "Email",
-                    secondary_text = resp['email']
+                    secondary_text = resp['email'],
+                    on_release = partial(self.copy_details, resp['email'])
                 )
             lst_item.add_widget(IconLeftWidget(icon="email"))
             self.sm.get_screen('details').ids.details.add_widget(lst_item)
@@ -472,10 +476,14 @@ class ContaXApp(MDApp):
             lst_item = ThreeLineIconListItem(
                     text = "Address",
                     secondary_text = "".join(lines[:no_of_lines//2]),
-                    tertiary_text = "".join(lines[no_of_lines//2:])
+                    tertiary_text = "".join(lines[no_of_lines//2:]),
+                    on_release = partial(self.copy_details, resp['address'])
                 )
             lst_item.add_widget(IconLeftWidget(icon="home"))
             self.sm.get_screen('details').ids.details.add_widget(lst_item)
+
+    def copy_details(self, tocopy, ele=None):
+        Clipboard.copy(tocopy)
 
     def contact_details(self, id, ele=None):
         self.root.current = 'details'
