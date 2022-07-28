@@ -25,6 +25,9 @@ details_url = "https://contaxmanagerapp.herokuapp.com/api/contacts/"
 loader = """
 <LoginScreen>:
     name: 'login'
+    Image:
+        source: 'logo.png'
+        pos_hint: {'center_x':0.5, 'center_y':0.77}
     MDTextField:
         id: username
         hint_text: "Username"
@@ -304,6 +307,7 @@ class EditScreen(Screen):
 class ContaXApp(MDApp):
 
     def build(self):
+        self.icon = "icon1.png"
         
         self.theme_cls.theme_style = "Dark"
         self.theme_cls.primary_palette = "LightBlue"
