@@ -11,8 +11,10 @@ from kivy.uix.screenmanager import ScreenManager
 import requests
 from functools import partial
 
-# helper_text: "test"
-# helper_text_mode: "on_focus"
+from kivy.core.window import Window
+
+Window.keyboard_anim_args = {'d':.2, 't':'in_out_expo'}
+Window.softinpu_mode = "below_target"
 
 login_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/login/"
 register_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/registration/"
@@ -48,6 +50,13 @@ loader = """
         on_release: app.register_screen()
 <RegisterScreen>:
     name: 'register'
+    MDFloatingActionButton:
+        icon: 'arrow-left'
+        pos_hint: {'center_y': 0.95}
+        theme_text_color: 'Custom'
+        md_bg_color: 0.09, 0.08, 0.08, 1
+        text_color: 0.16, 0.77, 0.96, 1
+        on_release: app.back_to_login()
     MDTextField:
         id: username
         hint_text: "Username"
@@ -77,14 +86,9 @@ loader = """
         pos_hint: {'center_x':0.5, 'center_y':0.45}
         multiline: False
     MDRectangleFlatButton:
-        text: "Back"
-        font_size: '18sp'
-        pos_hint: {'center_x':0.4, 'center_y':0.35}
-        on_release: app.back_to_login()
-    MDRectangleFlatButton:
         text: "Register"
         font_size: '18sp'
-        pos_hint: {'center_x':0.6, 'center_y':0.35}
+        pos_hint: {'center_x':0.5, 'center_y':0.35}
         on_release: app.register(username.text, email.text, password.text, password2.text)
 <ContactsScreen>:
     name: 'list'
