@@ -14,8 +14,12 @@ from functools import partial
 from kivy.core.window import Window
 from kivy.core.clipboard import Clipboard
 
+from kivy.core.window import Window
+
 Window.keyboard_anim_args = {'d':.2, 't':'in_out_expo'}
-Window.softinpu_mode = "below_target"
+Window.softinput_mode = "below_target"
+
+Window.size = (288, 624)
 
 login_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/login/"
 register_url = "https://contaxmanagerapp.herokuapp.com/dj-rest-auth/registration/"
